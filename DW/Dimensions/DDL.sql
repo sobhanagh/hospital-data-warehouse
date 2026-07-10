@@ -61,3 +61,15 @@ CREATE TABLE Dim_Facility (
     ValidTo DATETIME NOT NULL,
     IsCurrent BIT NOT NULL
 );
+
+CREATE TABLE Dim_Lab_Items (
+    LabTest_Key INT IDENTITY PRIMARY KEY,  
+    Item_ID INT NOT NULL,
+    LabTest_Name VARCHAR(100),              
+    Fluid_Type VARCHAR(100),             
+    Category VARCHAR(100),         
+    LOINC_Code VARCHAR(100),         
+
+    Source_Row_ID INT,                      
+    Extract_DateTime DATETIME
+);

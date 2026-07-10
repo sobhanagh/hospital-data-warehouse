@@ -1,73 +1,50 @@
 
--- Transaction
+-- Transactional
 
-CREATE TABLE Fact_LabTest_Result (
-    Fact_ID BIGINT IDENTITY PRIMARY KEY,
+CREATE TABLE Fact_Lab_Event (
+    Lab_Event_SK BIGINT IDENTITY PRIMARY KEY,
 
-    -- Foreign Keys (Dimensions)
-    Patient_Key INT,
-    Admission_Key INT,
-    LabItem_Key INT,
-    Date_Key INT,
-    -- Degenerate Dimension
-    Event_ID INT, -- from ROW_ID
-    FLAG VARCHAR(20),
-    -- Measures
-    Value_Num DOUBLE PRECISION,
-    [VALUE] VARCHAR(200),
+    Date_SK INT NOT NULL,
+    Patient_SK INT NOT NULL,
+    LabTest_SK INT NOT NULL,
+    Admission_ID INT,
+    
+    Value_Num FLOAT,
+    Value_Text VARCHAR(200),
+    Value_Unit VARCHAR(20),
+    Flag VARCHAR(20),
+
+    CONSTRAINT FK_Lab_Date FOREIGN KEY (Date_SK) REFERENCES Dim_Date(Date_SK),
+    CONSTRAINT FK_Lab_Patient FOREIGN KEY (Patient_SK) REFERENCES Dim_Patient(Patient_SK),
+    CONSTRAINT FK_Lab_Item FOREIGN KEY (LabTest_SK) REFERENCES Dim_Lab_Items(LabTest_Key)
 );
 
 
 -- Periodic
 
-CREATE TABLE Fact_LabTest_DailySnapshot (
-    Snapshot_ID BIGINT IDENTITY PRIMARY KEY,
+CREATE TABLE Fact_Daily_ICU_Status (
+    Snapshot_SK BIGINT IDENTITY PRIMARY KEY,
 
-    -- Foreign Keys (Dimensions)
-    Patient_Key INT,
-    LabItem_Key INT,
-    Date_Key INT,
+    Date_SK INT NOT NULL,
+    Patient_SK INT NOT NULL,
+    ICU_Stay_ID INT NOT NULL,
 
-    -- Aggregated Measures
-    Total_Tests INT,
-    Avg_Value DOUBLE PRECISION,
-    Min_Value DOUBLE PRECISION,
-    Max_Value DOUBLE PRECISION,
-    Abnormal_Count INT
+    Fluid_Input_ml FLOAT,
+    Blood_Input_ml FLOAT,
+
+    Urine_Output_ml FLOAT,
+    Drain_Output_ml FLOAT,
+
+    Total_Input_ml FLOAT,
+    Total_Output_ml FLOAT,
+
+    Net_Fluid_ml FLOAT, -- Total_Input_ml - Total_Output_ml
+
+    LOS_ICU_Day INT,
+
+    CONSTRAINT FK_Fluid_Date FOREIGN KEY (Date_SK) REFERENCES Dim_Date(Date_SK),
+    CONSTRAINT FK_Fluid_Patient FOREIGN KEY (Patient_SK) REFERENCES Dim_Patient(Patient_SK)
 );
 
-CREATE TABLE Fact_LabTest_DailyPopulationSummary (
-    Snapshot_ID BIGINT IDENTITY PRIMARY KEY,
-
-    -- Foreign Keys (Dimensions)
-    LabItem_Key INT,
-    Date_Key INT,
-
-    -- Aggregated Measures
-    Total_Tests INT,              -- total number of tests performed
-    Patient_Count INT,            -- distinct patients tested
-    Avg_Value DOUBLE PRECISION,   -- average value across all tests
-    Min_Value DOUBLE PRECISION,   -- lowest value observed
-    Max_Value DOUBLE PRECISION,   -- highest value observed
-    Abnormal_Count INT,           -- number of abnormal results
-
-    Extract_DateTime DATETIME
-);
 
 -- Accumulating
-
-CREATE TABLE Fact_LabTest_History (
-    Lifecycle_ID BIGINT IDENTITY PRIMARY KEY,
-
-    -- Foreign Keys (Dimensions)
-    Patient_Key INT,
-    LabItem_Key INT,
-
-    -- Milestone Dates
-    First_Test_Date_Key INT,
-    Last_Test_Date_Key INT,
-
-    -- Metrics
-    Total_Tests INT,
-    Days_Between_First_Last INT
-);

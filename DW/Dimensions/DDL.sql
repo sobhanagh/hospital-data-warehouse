@@ -64,7 +64,6 @@ CREATE TABLE Dim_Facility (
 
 CREATE TABLE Dim_Lab_Items (
     LabTest_Key INT IDENTITY PRIMARY KY,  
-
     Item_ID INT NOT NULL,
     Label VARCHAR(200),
     Fluid_Type VARCHAR(100),

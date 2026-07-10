@@ -9,15 +9,12 @@ CREATE TABLE Fact_LabTest_Result (
     Admission_Key INT,
     LabItem_Key INT,
     Date_Key INT,
-
     -- Degenerate Dimension
     Event_ID INT, -- from ROW_ID
-
+    FLAG VARCHAR(20),
     -- Measures
     Value_Num DOUBLE PRECISION,
-    
-    -- Flags
-    Is_Abnormal BIT
+    [VALUE] VARCHAR(200),
 );
 
 

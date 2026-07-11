@@ -19,7 +19,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    INSERT INTO Stage.Stg_ETL_Log
+    INSERT INTO Stage.ETL_Log
     (
         Procedure_Name,
         Action_Name,

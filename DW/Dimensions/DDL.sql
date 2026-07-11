@@ -71,7 +71,4 @@ CREATE TABLE Dim_Lab_Items (
     LOINC_Code VARCHAR(100),
     Source_Row_ID INT,
     Extract_DateTime DATETIME,
-    ValidFrom DATETIME NOT NULL,
-    ValidTo DATETIME NOT NULL,
-    IsCurrent BIT NOT NULL
 );

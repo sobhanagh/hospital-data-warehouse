@@ -275,10 +275,39 @@ SELECT
 FROM Hospital.ICU.ICU_STAYS;
 
 -- Full Load: Lab Items
-TRUNCATE TABLE Stage.D_LAB_ITEMS;
-INSERT INTO Stage.D_LAB_ITEMS (
-    ROW_ID, ITEM_ID, LABEL, FLUID, CATEGORY, LOINC_CODE
-)
-SELECT 
-    ROW_ID, ITEM_ID, LABEL, FLUID, CATEGORY, ISNULL(LOINC_CODE, 'Unknown') AS LOINC_CODE
-FROM Laboratory.dbo.D_LAB_ITEMS;
+CREATE PROCEDURE Stage.sp_Load_D_LAB_ITEMS
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @Affected_Row_Number INT = 0;
+
+    TRUNCATE TABLE Stage.D_LAB_ITEMS;
+
+    INSERT INTO Stage.D_LAB_ITEMS
+    (
+        ROW_ID,
+        ITEM_ID,
+        LABEL,
+        FLUID,
+        CATEGORY,
+        LOINC_CODE
+    )
+    SELECT
+        ROW_ID,
+        ITEM_ID,
+        LABEL,
+        FLUID,
+        CATEGORY,
+        ISNULL(LOINC_CODE, 'Unknown') AS LOINC_CODE
+    FROM Laboratory.dbo.D_LAB_ITEMS;
+
+    SET @Affected_Row_Number = @@ROWCOUNT;
+
+    EXEC Stage.sp_Insert_ETL_Log
+        @Procedure_Name = 'Stage.sp_Load_D_LAB_ITEMS',
+        @Action_Name = 'FULL LOAD',
+        @Object_Name = 'Stage.D_LAB_ITEMS',
+        @Affected_Row_Number = @Affected_Row_Number;
+END;
+GO

@@ -66,7 +66,7 @@ CREATE TABLE Dim_Lab_Items (
     LabTest_Key INT IDENTITY PRIMARY KY,  
     Item_ID INT NOT NULL,
     Label VARCHAR(200),
-    Fluid_Type VARCHAR(100),
+    Fluid VARCHAR(100),
     Category VARCHAR(100),
     LOINC_Code VARCHAR(100),
     Source_Row_ID INT,

@@ -29,8 +29,8 @@ BEGIN
     SET IDENTITY_INSERT Dim_Facility OFF;
 
     SET IDENTITY_INSERT Dim_Lab_Items ON;
-    INSERT INTO Dim_Lab_Items (LabTest_Key, Item_ID, Label, Fluid, Category, LOINC_Code, Extract_DateTime, ValidFrom, ValidTo, IsCurrent)
-    VALUES (-1, -1, 'Unknown', 'Unknown', 'Unknown', 'Unknown', GETDATE(), '1900-01-01', '9999-12-31', 1);
+    INSERT INTO Dim_Lab_Items (LabTest_Key, Item_ID, Label, Fluid, Category, LOINC_Code, ValidFrom, ValidTo, IsCurrent)
+    VALUES (-1, -1, 'Unknown', 'Unknown', 'Unknown', 'Unknown', '1900-01-01', '9999-12-31', 1);
     SET IDENTITY_INSERT Dim_Lab_Items OFF;
 
     DECLARE @StartDate DATETIME = '2001-01-01';
@@ -192,8 +192,7 @@ BEGIN
         Label VARCHAR(200),
         Fluid VARCHAR(100),
         Category VARCHAR(100),
-        LOINC_Code VARCHAR(100),
-        Extract_DateTime DATETIME
+        LOINC_Code VARCHAR(100)
     );
 
     MERGE Dim_Lab_Items AS Target
@@ -203,8 +202,7 @@ BEGIN
             LABEL,
             FLUID,
             CATEGORY,
-            LOINC_CODE,
-            Extract_DateTime
+            LOINC_CODE
         FROM DW_Staging.Stage.D_LAB_ITEMS
     ) AS Source
     ON Target.Item_ID = Source.ITEM_ID
@@ -226,7 +224,7 @@ BEGIN
     WHEN NOT MATCHED BY TARGET THEN
         INSERT (
             Item_ID, Label, Fluid, Category, LOINC_Code,
-            Extract_DateTime, ValidFrom, ValidTo, IsCurrent
+            ValidFrom, ValidTo, IsCurrent
         )
         VALUES (
             Source.ITEM_ID,
@@ -234,7 +232,6 @@ BEGIN
             Source.FLUID,
             Source.CATEGORY,
             Source.LOINC_CODE,
-            Source.Extract_DateTime,
             @ProcessDate,
             '9999-12-31',
             1
@@ -247,13 +244,12 @@ BEGIN
         Source.FLUID,
         Source.CATEGORY,
         Source.LOINC_CODE,
-        Source.Extract_DateTime
     INTO @Changes;
 
     -- Insert new version for updated rows
     INSERT INTO Dim_Lab_Items (
         Item_ID, Label, Fluid, Category, LOINC_Code,
-        Extract_DateTime, ValidFrom, ValidTo, IsCurrent
+        ValidFrom, ValidTo, IsCurrent
     )
     SELECT
         Item_ID,
@@ -261,7 +257,6 @@ BEGIN
         Fluid,
         Category,
         LOINC_Code,
-        Extract_DateTime,
         @ProcessDate,
         '9999-12-31',
         1

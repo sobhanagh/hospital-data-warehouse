@@ -123,7 +123,7 @@ BEGIN
 
     WHEN NOT MATCHED BY TARGET THEN
         INSERT (Patient_ID, Gender, Date_Of_Birth, Insurance, Date_Of_Death, Ethnicity)
-        VALUES (Source.SUBJECT_ID, CASE Source.GENDER WHEN 'M' THEN 'Male' WHEN 'F' THEN 'Female' ELSE 'Unk', Source.DOB, Source.INSURANCE, Source.DOD, Source.ETHNICITY);
+        VALUES (Source.SUBJECT_ID, CASE Source.GENDER WHEN 'M' THEN 'Male' WHEN 'F' THEN 'Female' ELSE 'Unk' END, Source.DOB, Source.INSURANCE, Source.DOD, Source.ETHNICITY);
 
 END;
 GO

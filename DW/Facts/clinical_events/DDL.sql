@@ -48,3 +48,37 @@ CREATE TABLE Fact_Daily_ICU_Status (
 
 
 -- Accumulating
+
+CREATE TABLE Fact_ICU_Clinical_Journey (
+    ICU_Stay_ID INT PRIMARY KEY,
+
+    Patient_SK INT NOT NULL,
+    Admit_Date_SK INT NOT NULL,
+
+    -- Timeline
+    ICU_Admit_Time DATETIME,
+    Vent_Start_Time DATETIME,
+    Vent_End_Time DATETIME,
+    First_Antibiotic_Time DATETIME,
+    First_Culture_Time DATETIME,
+    Dialysis_Start_Time DATETIME,
+    ICU_Discharge_Time DATETIME,
+
+    -- Measure
+    -- Durations 
+    Time_To_Vent_Hours FLOAT, -- Vent_Start_Time - ICU_Admit_Time
+    Vent_Duration_Hours FLOAT, -- Vent_End_Time - Vent_Start_Time
+    Time_To_Antibiotic_Hours FLOAT, -- First_Antibiotic_Time - ICU_Admit_Time
+    LOS_ICU_Hours FLOAT,
+
+    -- Flags
+    Ventilated_Flag INT,
+    Sepsis_Suspected_Flag INT,
+    Dialysis_Flag INT,
+
+    -- Outcome
+    Mortality_Flag INT,
+
+    CONSTRAINT FK_Journey_Patient FOREIGN KEY (Patient_SK) REFERENCES Dim_Patient(Patient_SK),
+    CONSTRAINT FK_Journey_Admit_Date FOREIGN KEY (Admit_Date_SK) REFERENCES Dim_Date(Date_SK)
+);

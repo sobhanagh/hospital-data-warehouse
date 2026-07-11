@@ -1,4 +1,4 @@
-CREATE TABLE Stg_ETL_Log (
+CREATE TABLE Stage.ETL_Log (
     Log_ID BIGINT IDENTITY(1,1) PRIMARY KEY,
     Procedure_Name VARCHAR(255) NOT NULL,
     Action_Name VARCHAR(50) NOT NULL,
@@ -8,10 +8,7 @@ CREATE TABLE Stg_ETL_Log (
 );
 
 
-
-
--- procedure
-CREATE PROCEDURE sp_Insert_Stg_ETL_Log
+CREATE PROCEDURE Stage.sp_Insert_ETL_Log
 (
     @Procedure_Name VARCHAR(255),
     @Action_Name VARCHAR(50),
@@ -22,7 +19,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    INSERT INTO Stg_ETL_Log
+    INSERT INTO Stage.Stg_ETL_Log
     (
         Procedure_Name,
         Action_Name,

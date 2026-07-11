@@ -34,7 +34,7 @@ BEGIN
     SET IDENTITY_INSERT Dim_Lab_Items OFF;
 
     DECLARE @StartDate DATETIME = '2001-01-01';
-    DECLARE @EndDate DATETIME = '2012-12-31';
+    DECLARE @EndDate DATETIME = '2013-12-31';
 
     WHILE @StartDate <= @EndDate
     BEGIN

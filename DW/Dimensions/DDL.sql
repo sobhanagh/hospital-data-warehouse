@@ -14,14 +14,11 @@ CREATE TABLE Dim_Date (
 CREATE TABLE Dim_Patient (
     Patient_SK INT IDENTITY NOT NULL PRIMARY KEY,
     Patient_ID INT NOT NULL,
-    Gender VARCHAR(5),
-    Date_Of_Birth DATETIME,
+    Gender VARCHAR(10),
     Ethnicity VARCHAR(200),
-    Expire_Flag INT,
-    Date_Of_Death DATETIME,
-    ValidFrom DATETIME NOT NULL,
-    ValidTo DATETIME NOT NULL,
-    IsCurrent BIT NOT NULL
+    Insurance VARCHAR(255),
+    Date_Of_Birth DATETIME,
+    Date_Of_Death DATETIME
 );
 
 CREATE TABLE Dim_Diagnosis (

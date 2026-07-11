@@ -243,7 +243,7 @@ BEGIN
         Source.LABEL,
         Source.FLUID,
         Source.CATEGORY,
-        Source.LOINC_CODE,
+        Source.LOINC_CODE
     INTO @Changes;
 
     -- Insert new version for updated rows

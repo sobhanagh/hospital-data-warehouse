@@ -66,7 +66,6 @@ CREATE TABLE Dim_Lab_Items (
     Fluid VARCHAR(100),
     Category VARCHAR(100),
     LOINC_Code VARCHAR(100),
-    Source_Row_ID INT,
     Extract_DateTime DATETIME,
     ValidFrom DATETIME NOT NULL,
     ValidTo DATETIME NOT NULL,

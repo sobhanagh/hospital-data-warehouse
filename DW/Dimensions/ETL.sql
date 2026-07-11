@@ -28,8 +28,13 @@ BEGIN
     VALUES (-1, -1, 'Unknown', '1900-01-01', '9999-12-31', 1);
     SET IDENTITY_INSERT Dim_Facility OFF;
 
+    SET IDENTITY_INSERT Dim_Lab_Items ON;
+    INSERT INTO Dim_Lab_Items (LabTest_Key, Item_ID, Label, Fluid, Category, LOINC_Code, Extract_DateTime, ValidFrom, ValidTo, IsCurrent)
+    VALUES (-1, -1, 'Unknown', 'Unknown', 'Unknown', 'Unknown', GETDATE(), '1900-01-01', '9999-12-31', 1);
+    SET IDENTITY_INSERT Dim_Lab_Items OFF;
+
     DECLARE @StartDate DATETIME = '2001-01-01';
-    DECLARE @EndDate DATETIME = '2012-12-31';
+    DECLARE @EndDate DATETIME = '2013-12-31';
 
     WHILE @StartDate <= @EndDate
     BEGIN
@@ -169,6 +174,99 @@ BEGIN
         CG_ID, Label, Description, @ProcessDate, '9999-12-31', 1
     FROM @Type2Changes
     WHERE Action_Type = 'UPDATE'; 
+
+END;
+GO
+
+CREATE PROCEDURE sp_Load_Dim_Lab_Items
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @ProcessDate DATETIME = GETDATE();
+
+    -- Temp table to track changes (for SCD Type 2)
+    DECLARE @Changes TABLE (
+        Action_Type VARCHAR(20),
+        Item_ID INT,
+        Label VARCHAR(200),
+        Fluid VARCHAR(100),
+        Category VARCHAR(100),
+        LOINC_Code VARCHAR(100),
+        Extract_DateTime DATETIME
+    );
+
+    MERGE Dim_Lab_Items AS Target
+    USING (
+        SELECT DISTINCT
+            ITEM_ID,
+            LABEL,
+            FLUID,
+            CATEGORY,
+            LOINC_CODE,
+            Extract_DateTime
+        FROM DW_Staging.Stage.D_LAB_ITEMS
+    ) AS Source
+    ON Target.Item_ID = Source.ITEM_ID
+       AND Target.IsCurrent = 1
+
+    -- SCD Type 2 change detection
+    WHEN MATCHED AND (
+        ISNULL(Target.Label, '') <> ISNULL(Source.LABEL, '') OR
+        ISNULL(Target.Fluid, '') <> ISNULL(Source.FLUID, '') OR
+        ISNULL(Target.Category, '') <> ISNULL(Source.CATEGORY, '') OR
+        ISNULL(Target.LOINC_Code, '') <> ISNULL(Source.LOINC_CODE, '')
+    )
+    THEN 
+        UPDATE SET 
+            Target.IsCurrent = 0,
+            Target.ValidTo = @ProcessDate
+
+    -- New records
+    WHEN NOT MATCHED BY TARGET THEN
+        INSERT (
+            Item_ID, Label, Fluid, Category, LOINC_Code,
+            Extract_DateTime, ValidFrom, ValidTo, IsCurrent
+        )
+        VALUES (
+            Source.ITEM_ID,
+            Source.LABEL,
+            Source.FLUID,
+            Source.CATEGORY,
+            Source.LOINC_CODE,
+            Source.Extract_DateTime,
+            @ProcessDate,
+            '9999-12-31',
+            1
+        )
+
+    OUTPUT 
+        $action,
+        Source.ITEM_ID,
+        Source.LABEL,
+        Source.FLUID,
+        Source.CATEGORY,
+        Source.LOINC_CODE,
+        Source.Extract_DateTime
+    INTO @Changes;
+
+    -- Insert new version for updated rows
+    INSERT INTO Dim_Lab_Items (
+        Item_ID, Label, Fluid, Category, LOINC_Code,
+        Extract_DateTime, ValidFrom, ValidTo, IsCurrent
+    )
+    SELECT
+        Item_ID,
+        Label,
+        Fluid,
+        Category,
+        LOINC_Code,
+        Extract_DateTime,
+        @ProcessDate,
+        '9999-12-31',
+        1
+    FROM @Changes
+    WHERE Action_Type = 'UPDATE';
 
 END;
 GO

@@ -44,7 +44,7 @@ BEGIN
 
 
         --------------------------------------------------
-        -- 3. Load Fact (Incremental)
+        -- 3. Load Fact
         --------------------------------------------------
         INSERT INTO dbo.Fact_Lab_Event
         (
@@ -107,7 +107,7 @@ BEGIN
 
 
         --------------------------------------------------
-        -- 7. Log SUCCESS (separate concern)
+        -- 7. Log SUCCESS
         --------------------------------------------------
         EXEC dbo.sp_Insert_ETL_Log
             @Procedure_Name = 'Load_Fact_Lab_Event',
@@ -128,7 +128,7 @@ BEGIN
 
 
         --------------------------------------------------
-        -- Update ETL_Control (FAILED + error message)
+        -- Update ETL_Control (FAILED)
         --------------------------------------------------
         UPDATE dbo.ETL_Control
         SET 
@@ -139,7 +139,7 @@ BEGIN
 
 
         --------------------------------------------------
-        -- Log FAIL (no mixing with control)
+        -- Log FAIL 
         --------------------------------------------------
         EXEC dbo.sp_Insert_ETL_Log
             @Procedure_Name = 'Load_Fact_Lab_Event',

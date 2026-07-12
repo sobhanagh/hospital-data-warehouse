@@ -143,7 +143,7 @@ BEGIN
         --------------------------------------------------
         EXEC dbo.sp_Insert_ETL_Log
             @Procedure_Name = 'Load_Fact_Lab_Event',
-            @Action_Name = 'FAILED',
+            @Action_Name = 'INSERT',
             @Object_Name = 'Fact_Lab_Event',
             @Affected_Row_Number = 0;
 

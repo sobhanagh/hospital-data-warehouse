@@ -672,6 +672,12 @@ BEGIN
             Error_Message = NULL
         WHERE Table_Name = 'Fact_ICU_Clinical_Journey';
 
+        EXEC dbo.sp_Insert_ETL_Log
+            @Procedure_Name = 'Load_Fact_ICU_Clinical_Journey',
+            @Action_Name = 'INSERT',
+            @Object_Name = 'Fact_ICU_Clinical_Journey',
+            @Affected_Row_Number = @TotalRows;
+
     END TRY
     BEGIN CATCH
 
@@ -681,6 +687,12 @@ BEGIN
             Error_Message = ERROR_MESSAGE(),
             Last_Run_Timestamp = GETDATE()
         WHERE Table_Name = 'Fact_ICU_Clinical_Journey';
+
+        EXEC dbo.sp_Insert_ETL_Log
+            @Procedure_Name = 'Load_Fact_ICU_Clinical_Journey',
+            @Action_Name = 'INSERT',
+            @Object_Name = 'Fact_ICU_Clinical_Journey',
+            @Affected_Row_Number = @InsertedRows;
 
     END CATCH
 END;

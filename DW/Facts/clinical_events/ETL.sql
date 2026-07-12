@@ -12,7 +12,7 @@ BEGIN
     BEGIN TRY
 
         --------------------------------------------------
-        -- 1. Ensure control record exists
+        -- Ensure control record exists
         --------------------------------------------------
         IF NOT EXISTS (
             SELECT 1 
@@ -36,7 +36,7 @@ BEGIN
 
 
         --------------------------------------------------
-        -- 2. Get last processed ID
+        -- Get last processed ID
         --------------------------------------------------
         SELECT @LastProcessedID = Last_Processed_ID
         FROM dbo.ETL_Control
@@ -44,7 +44,7 @@ BEGIN
 
 
         --------------------------------------------------
-        -- 3. Load Fact
+        -- Load Fact
         --------------------------------------------------
         INSERT INTO dbo.Fact_Lab_Event
         (
@@ -81,13 +81,13 @@ BEGIN
 
 
         --------------------------------------------------
-        -- 4. Capture rowcount IMMEDIATELY
+        -- Capture rowcount IMMEDIATELY
         --------------------------------------------------
         SET @InsertedRows = @@ROWCOUNT;
 
 
         --------------------------------------------------
-        -- 5. Get new max ROW_ID
+        -- Get new max ROW_ID
         --------------------------------------------------
         SELECT @NewLastProcessedID = MAX(ROW_ID)
         FROM DW_Staging.Stage.LAB_EVENTS
@@ -95,7 +95,7 @@ BEGIN
 
 
         --------------------------------------------------
-        -- 6. Update ETL_Control (SUCCESS)
+        -- Update ETL_Control (SUCCESS)
         --------------------------------------------------
         UPDATE dbo.ETL_Control
         SET 
@@ -107,7 +107,7 @@ BEGIN
 
 
         --------------------------------------------------
-        -- 7. Log SUCCESS
+        -- Log SUCCESS
         --------------------------------------------------
         EXEC dbo.sp_Insert_ETL_Log
             @Procedure_Name = 'Load_Fact_Lab_Event',
@@ -147,10 +147,6 @@ BEGIN
             @Object_Name = 'Fact_Lab_Event',
             @Affected_Row_Number = 0;
 
-
-        --------------------------------------------------
-        -- Re-throw error
-        --------------------------------------------------
         THROW;
 
     END CATCH
@@ -212,7 +208,7 @@ BEGIN
     BEGIN TRY
 
     --------------------------------------------------
-    -- 1. Ensure control record exists
+    -- Ensure control record exists
     --------------------------------------------------
     IF NOT EXISTS (
         SELECT 1 
@@ -226,32 +222,32 @@ BEGIN
     END
 
     --------------------------------------------------
-    -- 2. Get last processed date
+    -- Get last processed date
     --------------------------------------------------
     SELECT @LastProcessedDate = Last_Processed_Date
     FROM dbo.ETL_Control
     WHERE Table_Name = 'ICU_DAILY_STATUS';
 
     --------------------------------------------------
-    -- 3. Safe date (until yesterday)
+    -- Safe date (until yesterday)
     --------------------------------------------------
     SET @MaxSafeDate = DATEADD(DAY, -1, CAST(GETDATE() AS DATE));
 
     --------------------------------------------------
-    -- 4. Sliding window
+    -- Sliding window
     --------------------------------------------------
     SET @ReloadStartDate =
         ISNULL(DATEADD(DAY, -2, @LastProcessedDate), '1900-01-01');
 
     --------------------------------------------------
-    -- 5. Clean temp tables
+    -- Clean temp tables
     --------------------------------------------------
     TRUNCATE TABLE dbo.Tmp_InputData;
     TRUNCATE TABLE dbo.Tmp_OutputData;
     TRUNCATE TABLE dbo.Tmp_Aggregated;
 
     --------------------------------------------------
-    -- 6. Load InputData
+    -- Load InputData
     --------------------------------------------------
     INSERT INTO dbo.Tmp_InputData
     SELECT 
@@ -282,7 +278,7 @@ BEGIN
     GROUP BY m.SUBJECT_ID, m.ICU_STAY_ID, CAST(m.START_TIME AS DATE), d.CATEGORY;
 
     --------------------------------------------------
-    -- 7. Load OutputData
+    -- Load OutputData
     --------------------------------------------------
     INSERT INTO dbo.Tmp_OutputData
     SELECT 
@@ -299,7 +295,7 @@ BEGIN
     GROUP BY o.SUBJECT_ID, o.ICU_STAY_ID, CAST(o.CHART_TIME AS DATE), d.CATEGORY;
 
     --------------------------------------------------
-    -- 8. Build Aggregated
+    -- Build Aggregated
     --------------------------------------------------
     INSERT INTO dbo.Tmp_Aggregated
     SELECT 
@@ -324,7 +320,7 @@ BEGIN
         COALESCE(i.SnapshotDate, o.SnapshotDate);
 
     --------------------------------------------------
-    -- 9. Delete old data (window)
+    -- Delete old data (window)
     --------------------------------------------------
     DELETE FROM dbo.Fact_Daily_ICU_Status
     WHERE Date_SK IN (
@@ -334,7 +330,7 @@ BEGIN
     );
 
     --------------------------------------------------
-    -- 10. Insert into fact
+    -- Insert into fact
     --------------------------------------------------
     INSERT INTO dbo.Fact_Daily_ICU_Status
     SELECT
@@ -370,7 +366,7 @@ BEGIN
     SET @InsertedRows = @@ROWCOUNT;
 
     --------------------------------------------------
-    -- 11. Get REAL last processed date (from FACT)
+    -- Get REAL last processed date (from FACT)
     --------------------------------------------------
     SELECT @NewLastProcessedDate = MAX(d.FullDate)
     FROM dbo.Fact_Daily_ICU_Status f
@@ -383,7 +379,7 @@ BEGIN
         SET @NewLastProcessedDate = @LastProcessedDate;
 
     --------------------------------------------------
-    -- 12. Update ETL Control
+    -- Update ETL Control
     --------------------------------------------------
     UPDATE dbo.ETL_Control
     SET 
@@ -394,7 +390,7 @@ BEGIN
     WHERE Table_Name = 'ICU_DAILY_STATUS';
 
     --------------------------------------------------
-    -- 13. Log
+    -- Log
     --------------------------------------------------
     EXEC dbo.sp_Insert_ETL_Log
         @Procedure_Name = 'Load_Fact_Daily_ICU_Status',
@@ -414,6 +410,15 @@ BEGIN
             Last_Run_Timestamp = GETDATE(),
             Error_Message = @ErrorMessage
         WHERE Table_Name = 'ICU_DAILY_STATUS';
+
+        --------------------------------------------------
+        -- Log FAIL 
+        --------------------------------------------------
+        EXEC dbo.sp_Insert_ETL_Log
+            @Procedure_Name = 'Load_Fact_Lab_Event',
+            @Action_Name = 'INSERT',
+            @Object_Name = 'Fact_Lab_Event',
+            @Affected_Row_Number = 0;
 
         THROW;
 

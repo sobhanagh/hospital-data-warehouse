@@ -21,3 +21,19 @@ CREATE TABLE Bridge_Diagnosis_Group (
     Is_Primary_Diagnosis BIT NOT NULL,
     CONSTRAINT pk_Bridge_Diagnosis_Group PRIMARY KEY (Diagnosis_Group_SK, Diagnosis_SK)
 );
+
+CREATE TABLE Fact_ICU_Bed_Coordination (
+    Callout_SK BIGINT IDENTITY PRIMARY KEY,
+    Patient_SK INT NOT NULL,
+    HADM_ID INT NOT NULL,
+    Create_Date_SK INT NOT NULL,
+    Submit_Ward_SK INT NOT NULL,
+    Callout_Ward_SK INT NOT NULL,
+    Callout_Service VARCHAR(10) NOT NULL,
+    Callout_Status VARCHAR(20) NOT NULL,   -- 'Active', 'Resolved', 'Cancelled'
+    Callout_Outcome VARCHAR(20) NOT NULL,  -- 'Discharged', 'Cancelled'    
+    Admin_Acknowledge_Delay_Minutes INT NULL,
+    Bed_Placement_Delay_Hours DECIMAL(10,2) NULL,
+    Is_Unacknowledged_Flag BIT NOT NULL,
+    Is_Severe_Bed_Block_Flag BIT NOT NULL,
+);

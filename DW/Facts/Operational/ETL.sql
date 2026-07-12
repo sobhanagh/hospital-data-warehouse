@@ -240,3 +240,126 @@ BEGIN
     END CATCH;
 END;
 GO
+
+CREATE PROCEDURE sp_Load_Fact_ICU_Bed_Coordination
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @TableName VARCHAR(100) = 'Fact_ICU_Bed_Coordination';
+    DECLARE @LastProcessedID INT;
+    DECLARE @CurrentMaxID INT;
+
+    SELECT @LastProcessedID = Last_Processed_ID 
+    FROM ETL_Control 
+    WHERE Table_Name = @TableName;
+
+    IF @LastProcessedID IS NULL 
+        SET @LastProcessedID = 0;
+
+    SELECT @CurrentMaxID = MAX(ROW_ID) FROM DW_Staging.Stage.Clinic_CALLOUT;
+
+    IF @CurrentMaxID IS NULL OR @CurrentMaxID <= @LastProcessedID
+        RETURN;
+
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        WITH SourceDelta AS (
+            SELECT 
+                c.ROW_ID AS Callout_ID,
+                ISNULL(p.Patient_SK, -1) AS Patient_SK,
+                c.HADM_ID,
+                CAST(FORMAT(c.CREATE_TIME, 'yyyyMMdd') AS INT) AS Create_Date_SK,                
+                ISNULL(f_sub.Facility_SK, -1) AS Submit_Ward_SK,
+                ISNULL(f_call.Facility_SK, -1) AS Callout_Ward_SK,
+                c.CALLOUT_SERVICE AS Callout_Service,
+                c.CALLOUT_STATUS AS Callout_Status,
+                c.CALLOUT_OUTCOME AS Callout_Outcome,                
+                CASE 
+                    WHEN c.ACKNOWLEDGE_TIME IS NOT NULL 
+                    THEN DATEDIFF(minute, c.CREATE_TIME, c.ACKNOWLEDGE_TIME) 
+                    ELSE NULL 
+                END AS Admin_Acknowledge_Delay_Minutes,
+                CASE 
+                    WHEN c.OUTCOME_TIME IS NOT NULL 
+                    THEN CAST(DATEDIFF(minute, c.CREATE_TIME, c.OUTCOME_TIME) / 60.0 AS DECIMAL(10,2)) 
+                    ELSE NULL 
+                END AS Bed_Placement_Delay_Hours,                
+                CASE WHEN c.ACKNOWLEDGE_STATUS = 'Unacknowledged' THEN 1 ELSE 0 END AS Is_Unacknowledged_Flag,
+                CASE 
+                    WHEN c.OUTCOME_TIME IS NOT NULL AND (DATEDIFF(minute, c.CREATE_TIME, c.OUTCOME_TIME) / 60.0) > 6.0 
+                    THEN 1 ELSE 0 
+                END AS Is_Severe_Bed_Block_Flag
+            FROM DW_Staging.Stage.Clinic_CALLOUT c
+            LEFT JOIN Dim_Patient p
+                ON c.SUBJECT_ID = p.Patient_ID
+            LEFT JOIN Dim_Facility f_sub
+                ON c.SUBMIT_WARD_ID = f_sub.Ward_ID
+            LEFT JOIN Dim_Facility f_call
+                ON c.CALLOUT_WARD_ID = f_call.Ward_ID
+            WHERE c.ROW_ID > @LastProcessedID 
+        )
+        MERGE Fact_ICU_Bed_Coordination AS Target
+        USING SourceDelta AS Source
+        ON Target.Callout_SK = Source.Callout_ID
+
+        WHEN MATCHED AND (
+            Target.Callout_Status <> Source.Callout_Status OR
+            Target.Callout_Outcome <> Source.Callout_Outcome OR
+            ISNULL(Target.Admin_Acknowledge_Delay_Minutes, -1) <> ISNULL(Source.Admin_Acknowledge_Delay_Minutes, -1) OR
+            ISNULL(Target.Bed_Placement_Delay_Hours, -1) <> ISNULL(Source.Bed_Placement_Delay_Hours, -1) OR
+            Target.Is_Unacknowledged_Flag <> Source.Is_Unacknowledged_Flag OR
+            Target.Is_Severe_Bed_Block_Flag <> Source.Is_Severe_Bed_Block_Flag
+        ) THEN 
+            UPDATE SET 
+                Target.Patient_SK = Source.Patient_SK,
+                Target.Callout_Status = Source.Callout_Status,
+                Target.Callout_Outcome = Source.Callout_Outcome,
+                Target.Admin_Acknowledge_Delay_Minutes = Source.Admin_Acknowledge_Delay_Minutes,
+                Target.Bed_Placement_Delay_Hours = Source.Bed_Placement_Delay_Hours,
+                Target.Is_Unacknowledged_Flag = Source.Is_Unacknowledged_Flag,
+                Target.Is_Severe_Bed_Block_Flag = Source.Is_Severe_Bed_Block_Flag
+
+        WHEN NOT MATCHED BY TARGET THEN
+            INSERT (
+                Callout_SK, Patient_SK, HADM_ID, Create_Date_SK, 
+                Submit_Ward_SK, Callout_Ward_SK, 
+                Callout_Service, Callout_Status, Callout_Outcome, 
+                Admin_Acknowledge_Delay_Minutes, Bed_Placement_Delay_Hours, 
+                Is_Unacknowledged_Flag, Is_Severe_Bed_Block_Flag
+            )
+            VALUES (
+                Source.Callout_ID, Source.Patient_SK, Source.HADM_ID, Source.Create_Date_SK, 
+                Source.Submit_Ward_SK, Source.Callout_Ward_SK, 
+                Source.Callout_Service, Source.Callout_Status, Source.Callout_Outcome, 
+                Source.Admin_Acknowledge_Delay_Minutes, Source.Bed_Placement_Delay_Hours,
+                Source.Is_Unacknowledged_Flag, Source.Is_Severe_Bed_Block_Flag
+            );
+
+        UPDATE ETL_Control 
+        SET 
+            Last_Processed_ID = @CurrentMaxID, 
+            Last_Run_Status = 'SUCCESS',
+            Last_Run_Timestamp = GETDATE()
+        WHERE Table_Name = @TableName;
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+
+        DECLARE @ErrMsg VARCHAR(4000) = ERROR_MESSAGE();
+
+        UPDATE ETL_Control 
+        SET 
+            Last_Run_Status = 'FAILED',
+            Last_Run_Timestamp = GETDATE(),
+            Error_Message = @ErrMsg
+        WHERE Table_Name = @TableName;
+
+        THROW;
+    END CATCH;
+END;
+GO

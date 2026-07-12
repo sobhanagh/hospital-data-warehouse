@@ -3,5 +3,5 @@ CREATE TABLE ETL_Control (
     Last_Processed_ID INT NOT NULL DEFAULT 0,
     Last_Run_Status VARCHAR(20) NOT NULL, -- 'SUCCESS', 'FAILED'
     Last_Run_Timestamp DATETIME DEFAULT GETDATE(),
-    Error_Message TEXT
+    Error_Message VARCHAR(4000)
 );

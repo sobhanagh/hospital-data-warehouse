@@ -5,5 +5,5 @@ CREATE TABLE ETL_Control (
     Last_Run_Timestamp DATETIME DEFAULT GETDATE(),
     Last_Processed_Date DATE, -- periodic 
     Last_Modified_Timestamp DATETIME, -- Accumulating
-    Error_Message TEXT
+    Error_Message VARCHAR(4000)
 );

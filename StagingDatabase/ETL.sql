@@ -177,11 +177,11 @@ SELECT @LastLabTime = ISNULL(MAX(CHART_TIME), '2001-01-01') FROM Stage.LAB_EVENT
 
 INSERT INTO Stage.LAB_EVENTS (
     ROW_ID, PATIENT_ID, ADMISSION_ID, ITEM_ID, CHART_TIME, 
-    [VALUE], VALUE_NUM, VALUE_UOM, FLAG, Extract_DateTime
+    [VALUE], VALUE_NUM, VALUE_UOM, FLAG
 )
 SELECT 
     ROW_ID, PATIENT_ID, ADMISSION_ID, ITEM_ID, CHART_TIME, 
-    [VALUE], VALUE_NUM, VALUE_UOM, FLAG, GETDATE()
+    [VALUE], VALUE_NUM, VALUE_UOM, FLAG
 FROM Laboratory.dbo.LAB_EVENTS
 WHERE CHART_TIME > @LastLabTime;
 
@@ -274,11 +274,40 @@ SELECT
     IN_TIME, OUT_TIME, LOS
 FROM Hospital.ICU.ICU_STAYS;
 
--- Full Load: Lab Items Dictionary
-TRUNCATE TABLE Stage.D_LAB_ITEMS;
-INSERT INTO Stage.D_LAB_ITEMS (
-    ROW_ID, ITEM_ID, LABEL, FLUID, CATEGORY, LOINC_CODE
-)
-SELECT 
-    ROW_ID, ITEM_ID, LABEL, FLUID, CATEGORY, ISNULL(LOINC_CODE, 'Unknown') AS LOINC_CODE, GETDATE()
-FROM Laboratory.dbo.D_LAB_ITEMS;
+-- Full Load: Lab Items
+CREATE PROCEDURE Stage.sp_Load_D_LAB_ITEMS
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @Affected_Row_Number INT = 0;
+
+    TRUNCATE TABLE Stage.D_LAB_ITEMS;
+
+    INSERT INTO Stage.D_LAB_ITEMS
+    (
+        ROW_ID,
+        ITEM_ID,
+        LABEL,
+        FLUID,
+        CATEGORY,
+        LOINC_CODE
+    )
+    SELECT
+        ROW_ID,
+        ITEM_ID,
+        LABEL,
+        FLUID,
+        CATEGORY,
+        ISNULL(LOINC_CODE, 'Unknown') AS LOINC_CODE
+    FROM Laboratory.dbo.D_LAB_ITEMS;
+
+    SET @Affected_Row_Number = @@ROWCOUNT;
+
+    EXEC Stage.sp_Insert_ETL_Log
+        @Procedure_Name = 'Stage.sp_Load_D_LAB_ITEMS',
+        @Action_Name = 'FULL LOAD',
+        @Object_Name = 'Stage.D_LAB_ITEMS',
+        @Affected_Row_Number = @Affected_Row_Number;
+END;
+GO

@@ -3,5 +3,7 @@ CREATE TABLE ETL_Control (
     Last_Processed_ID INT NOT NULL DEFAULT 0,
     Last_Run_Status VARCHAR(20) NOT NULL, -- 'SUCCESS', 'FAILED'
     Last_Run_Timestamp DATETIME DEFAULT GETDATE(),
+    Last_Processed_Date DATE, -- periodic 
+    Last_Modified_Timestamp DATETIME, -- Accumulating
     Error_Message VARCHAR(4000)
 );

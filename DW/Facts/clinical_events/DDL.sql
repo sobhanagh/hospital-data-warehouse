@@ -60,7 +60,6 @@ CREATE TABLE Fact_ICU_Clinical_Journey (
     Vent_Start_Time DATETIME,
     Vent_End_Time DATETIME,
     First_Antibiotic_Time DATETIME,
-    First_Culture_Time DATETIME,
     Dialysis_Start_Time DATETIME,
     ICU_Discharge_Time DATETIME,
 

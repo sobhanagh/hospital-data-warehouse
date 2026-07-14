@@ -6,7 +6,7 @@ CREATE TABLE Stage.ETL_Log (
     Execution_DateTime DATETIME2(3) NOT NULL DEFAULT SYSUTCDATETIME(),
     Affected_Row_Number INT NOT NULL DEFAULT 0
 );
-
+GO
 
 CREATE PROCEDURE Stage.sp_Insert_ETL_Log
 (

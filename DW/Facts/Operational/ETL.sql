@@ -178,7 +178,7 @@ BEGIN
 
         MERGE Fact_Hospital_Admissions AS Target
         USING SourceData AS Source
-        ON Target.Admision_ID = Source.HADM_ID
+        ON Target.Admission_ID = Source.HADM_ID
 
         WHEN MATCHED AND (
             Target.Patient_SK <> Source.Patient_SK OR
@@ -227,7 +227,7 @@ BEGIN
         IF @@TRANCOUNT > 0
             ROLLBACK TRANSACTION;
 
-        DECLARE @ErrMsg TEXT = ERROR_MESSAGE();
+        DECLARE @ErrMsg VARCHAR(4000) = ERROR_MESSAGE();
 
         UPDATE ETL_Control 
         SET 
@@ -323,7 +323,7 @@ BEGIN
 
         WHEN NOT MATCHED BY TARGET THEN
             INSERT (
-                Callout_SK, Patient_SK, Admision_ID, Create_Date_SK, 
+                Callout_SK, Patient_SK, Admission_ID, Create_Date_SK, 
                 Submit_Ward_SK, Callout_Ward_SK, 
                 Callout_Service, Callout_Status, Callout_Outcome, 
                 Admin_Acknowledge_Delay_Minutes, Bed_Placement_Delay_Hours, 

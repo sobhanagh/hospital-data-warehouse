@@ -18,14 +18,9 @@ BEGIN
     VALUES (-1, -1, 'Unknown', 'Unknown Caregiver', '1900-01-01', '9999-12-31', 1);
     SET IDENTITY_INSERT Dim_Caregiver OFF;
 
-    SET IDENTITY_INSERT Dim_Clinical_Item ON;
-    INSERT INTO Dim_Clinical_Item (Item_SK, ITEM_ID, Item_Type, Label, Abbreviation, Category, DB_Source, LOINC_Code, Fluid)
-    VALUES (-1, -1, 'Unknown', 'Unknown Item', 'Unk', 'Unknown', 'Unknown', NULL, NULL);
-    SET IDENTITY_INSERT Dim_Clinical_Item OFF;
-
     SET IDENTITY_INSERT Dim_Facility ON;
-    INSERT INTO Dim_Facility (Facility_SK, Ward_ID, Care_Unit, ValidFrom, ValidTo, IsCurrent)
-    VALUES (-1, -1, 'Unknown', '1900-01-01', '9999-12-31', 1);
+    INSERT INTO Dim_Facility (Facility_SK, Ward_ID, Care_Unit)
+    VALUES (-1, -1, 'Unknown');
     SET IDENTITY_INSERT Dim_Facility OFF;
 
     SET IDENTITY_INSERT Dim_Lab_Items ON;

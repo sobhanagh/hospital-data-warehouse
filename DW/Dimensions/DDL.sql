@@ -38,18 +38,6 @@ CREATE TABLE Dim_Caregiver (
     IsCurrent BIT NOT NULL
 );
 
-CREATE TABLE Dim_Clinical_Item (
-    Item_SK INT IDENTITY NOT NULL PRIMARY KEY,
-    ITEM_ID INT NOT NULL,
-    Item_Type VARCHAR(20) NOT NULL, -- ICU or LAB
-    Label VARCHAR(200),
-    Abbreviation VARCHAR(100),
-    Category VARCHAR(100),
-    DB_Source VARCHAR(20),
-    LOINC_Code VARCHAR(100),
-    Fluid VARCHAR(100)
-);
-
 CREATE TABLE Dim_Facility (
     Facility_SK INT IDENTITY NOT NULL PRIMARY KEY,
     Ward_ID SMALLINT NOT NULL,

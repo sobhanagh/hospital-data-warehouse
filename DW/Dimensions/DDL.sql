@@ -54,9 +54,6 @@ CREATE TABLE Dim_Facility (
     Facility_SK INT IDENTITY NOT NULL PRIMARY KEY,
     Ward_ID SMALLINT NOT NULL,
     Care_Unit VARCHAR(20) NOT NULL,
-    ValidFrom DATETIME NOT NULL,
-    ValidTo DATETIME NOT NULL,
-    IsCurrent BIT NOT NULL
 );
 
 CREATE TABLE Dim_Lab_Items (

@@ -265,3 +265,68 @@ BEGIN
 
 END;
 GO
+
+CREATE PROCEDURE sp_Load_Dim_Facility
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    CREATE TABLE #CleanSourceFacilities (
+        Ward_ID SMALLINT PRIMARY KEY,
+        Care_Unit VARCHAR(20) NOT NULL
+    );
+
+    WITH RawFacilities AS (
+        SELECT CURR_WARD_ID AS Ward_ID, CURR_CAREUNIT AS Care_Unit, ISNULL(OUT_TIME, IN_TIME) AS Event_Time 
+        FROM DW_Staging.Stage.Clinic_TRANSFERS 
+        WHERE CURR_WARD_ID IS NOT NULL AND CURR_CAREUNIT IS NOT NULL
+            
+        UNION ALL
+            
+        SELECT PREV_WARD_ID, PREV_CAREUNIT, ISNULL(OUT_TIME, IN_TIME) 
+        FROM DW_Staging.Stage.Clinic_TRANSFERS 
+        WHERE PREV_WARD_ID IS NOT NULL AND PREV_CAREUNIT IS NOT NULL
+            
+        UNION ALL
+            
+        SELECT FIRST_WARD_ID, FIRST_CARE_UNIT, IN_TIME 
+        FROM DW_Staging.Stage.ICU_STAYS 
+        WHERE FIRST_WARD_ID IS NOT NULL AND FIRST_CARE_UNIT IS NOT NULL
+            
+        UNION ALL
+            
+        SELECT LAST_WARD_ID, LAST_CARE_UNIT, ISNULL(OUT_TIME, IN_TIME) 
+        FROM DW_Staging.Stage.ICU_STAYS 
+        WHERE LAST_WARD_ID IS NOT NULL AND LAST_CARE_UNIT IS NOT NULL
+    ),
+    DeduplicatedFacilities AS (
+        SELECT 
+            CAST(Ward_ID AS SMALLINT) AS Ward_ID,
+            CAST(LTRIM(RTRIM(Care_Unit)) AS VARCHAR(20)) AS Care_Unit,
+            ROW_NUMBER() OVER (
+                PARTITION BY CAST(Ward_ID AS SMALLINT) 
+                ORDER BY Event_Time DESC
+            ) AS RowRank
+        FROM RawFacilities
+        WHERE LTRIM(RTRIM(Care_Unit)) <> ''
+    )
+    INSERT INTO #CleanSourceFacilities (Ward_ID, Care_Unit)
+    SELECT Ward_ID, Care_Unit
+    FROM DeduplicatedFacilities
+    WHERE RowRank = 1;
+
+    INSERT INTO Dim_Facility (
+        Ward_ID, 
+        Care_Unit
+    )
+    SELECT 
+        s.Ward_ID,
+        s.Care_Unit
+    FROM #CleanSourceFacilities s
+    WHERE NOT EXISTS (
+        SELECT 1 
+        FROM Dim_Facility df 
+        WHERE df.Ward_ID = s.Ward_ID
+    );
+END;
+GO

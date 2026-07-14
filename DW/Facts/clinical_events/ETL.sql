@@ -415,9 +415,9 @@ BEGIN
         -- Log FAIL 
         --------------------------------------------------
         EXEC dbo.sp_Insert_ETL_Log
-            @Procedure_Name = 'Load_Fact_Lab_Event',
+            @Procedure_Name = 'Load_Fact_Daily_ICU_Status',
             @Action_Name = 'INSERT',
-            @Object_Name = 'Fact_Lab_Event',
+            @Object_Name = 'Fact_Daily_ICU_Status',
             @Affected_Row_Number = 0;
 
         THROW;

@@ -323,7 +323,7 @@ BEGIN
 
         WHEN NOT MATCHED BY TARGET THEN
             INSERT (
-                Callout_SK, Patient_SK, HADM_ID, Create_Date_SK, 
+                Callout_SK, Patient_SK, Admision_ID, Create_Date_SK, 
                 Submit_Ward_SK, Callout_Ward_SK, 
                 Callout_Service, Callout_Status, Callout_Outcome, 
                 Admin_Acknowledge_Delay_Minutes, Bed_Placement_Delay_Hours, 

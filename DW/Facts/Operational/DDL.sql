@@ -25,7 +25,7 @@ CREATE TABLE Bridge_Diagnosis_Group (
 CREATE TABLE Fact_ICU_Bed_Coordination (
     Callout_SK BIGINT IDENTITY PRIMARY KEY,
     Patient_SK INT NOT NULL,
-    HADM_ID INT NOT NULL,
+    Admission_ID INT NOT NULL,
     Create_Date_SK INT NOT NULL,
     Submit_Ward_SK INT NOT NULL,
     Callout_Ward_SK INT NOT NULL,
